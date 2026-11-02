@@ -89,7 +89,7 @@ target_include_directories(MeridianRack PRIVATE Source)
 target_compile_definitions(MeridianRack PUBLIC ${MERIDIAN_DEFS})
 target_link_libraries(MeridianRack
     PRIVATE
-        juce::juce_audio_processors
+        juce::juce_audio_utils
         juce::juce_audio_formats
         juce::juce_dsp
         juce::juce_gui_extra
