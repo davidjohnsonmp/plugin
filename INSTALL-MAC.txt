@@ -1,0 +1,30 @@
+MERIDIAN RACK - INSTALLING ON A MAC
+===================================
+
+This folder contains:
+  Meridian Rack.component   Audio Unit (Logic Pro, GarageBand, Ableton Live, Studio One...)
+  Meridian Rack.vst3        VST3 (Ableton Live, Cubase, Reaper, Studio One...)
+  Meridian Rack.app         Standalone app (for quick testing without a DAW)
+
+1. Open Terminal (Applications > Utilities > Terminal).
+
+2. Copy the line below, paste it into Terminal and press Return.
+   It assumes this folder is in your Downloads folder and is named
+   "MeridianRack-macOS". If it is somewhere else, type   cd   and a space,
+   drag the folder onto the Terminal window, press Return, then paste
+   only the part after the first "&&".
+
+   cd ~/Downloads/MeridianRack-macOS && xattr -dr com.apple.quarantine . && mkdir -p ~/Library/Audio/Plug-Ins/Components ~/Library/Audio/Plug-Ins/VST3 && cp -R "Meridian Rack.component" ~/Library/Audio/Plug-Ins/Components/ && cp -R "Meridian Rack.vst3" ~/Library/Audio/Plug-Ins/VST3/ && killall -9 AudioComponentRegistrar; echo DONE
+
+   (The xattr part removes the "downloaded from the internet" flag. The
+   plugin is not signed with a paid Apple developer certificate, so without
+   this step macOS may refuse to load it.)
+
+3. Restart your DAW.
+   Logic Pro: Logic Pro > Settings > Plug-in Manager > Reset & Rescan Selection
+   if it does not appear. Look under Audio Units > Meridian Audio Lab > Meridian Rack.
+
+4. Put Meridian Rack on your stereo mix bus (last insert).
+
+Where things are saved
+  User presets:   ~/Music/Meridian Rack/Presets
