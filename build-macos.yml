@@ -1,0 +1,62 @@
+name: Build Mac plugin
+
+# Runs automatically whenever files are uploaded/pushed, and can also be started
+# by hand from the Actions tab ("Run workflow").
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Get the source code
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: which ninja || brew install ninja
+
+      - name: Configure (downloads JUCE automatically)
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+
+      - name: Build AU, VST3 and Standalone (Apple Silicon + Intel)
+        run: cmake --build build --target MeridianRack_AU MeridianRack_VST3 MeridianRack_Standalone --parallel 4
+
+      - name: Sign (ad-hoc) and package
+        run: |
+          ART="build/MeridianRack_artefacts/Release"
+          PKG="MeridianRack-macOS"
+          mkdir -p "$PKG"
+          cp -R "$ART/AU/Meridian Rack.component" "$PKG/"
+          cp -R "$ART/VST3/Meridian Rack.vst3" "$PKG/"
+          cp -R "$ART/Standalone/Meridian Rack.app" "$PKG/"
+          for b in "$PKG/Meridian Rack.component" "$PKG/Meridian Rack.vst3" "$PKG/Meridian Rack.app"; do
+            codesign --force --deep --sign - "$b"
+          done
+          cp INSTALL-MAC.txt "$PKG/"
+          lipo -info "$PKG/Meridian Rack.component/Contents/MacOS/Meridian Rack"
+          # ditto keeps the bundle structure and permissions intact
+          mkdir -p dist
+          ditto -c -k --keepParent "$PKG" "dist/$PKG.zip"
+
+      - name: Upload the finished plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeridianRack-macOS
+          path: dist/MeridianRack-macOS.zip
+          retention-days: 30
+
+      - name: Validate the AU with Apple's auval
+        continue-on-error: true
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "MeridianRack-macOS/Meridian Rack.component" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 2
+          auval -v aufx MrRk Mrdn
